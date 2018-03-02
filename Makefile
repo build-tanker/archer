@@ -11,6 +11,10 @@ GREEN_COLOR=\x1b[32;01m
 RED_COLOR=\x1b[31;01m
 YELLOW_COLOR=\x1b[33;01m
 
+### End output
+end:
+	@echo "$(YELLOW_COLOR)🙏  🙏  🙏$(END_COLOR)"
+
 ### Clean temporary files
 clean:
 	@echo "$(GREEN_COLOR)Cleaning unwanted files $(END_COLOR)"
@@ -20,11 +24,13 @@ clean:
 ### Initialisation project for the first time
 init:
 	@echo "$(GREEN_COLOR)Initialising dependencies $(END_COLOR)"
+	go get -u github.com/golang/dep/cmd/dep
 	go get -u github.com/golang/lint/golint
 
-### End output
-end:
-	@echo "$(YELLOW_COLOR)🙏  🙏  🙏$(END_COLOR)"
+### Update dependencies
+update:
+	@echo "$(GREEN_COLOR)Running dep ensure $(END_COLOR)"
+	dep ensure
 
 ### Fix formatting
 fmt:
@@ -39,7 +45,7 @@ vet:
 ### Check for linting issues
 lint:
 	@echo "$(GREEN_COLOR)Running lint $(END_COLOR)"
-	golint ./...
+	golint ./... | grep -v vendor | grep -v "should have comment or be unexported"
 
 ### Manually test all packages
 test:
@@ -53,5 +59,8 @@ coverage:
 	go tool cover -html=coverage.txt -o coverage.html
 	@echo "$(YELLOW_COLOR)Run open ./coverage.html to view coverage $(END_COLOR)"
 
+### Build the latest source
+build: fmt vet lint coverage install end
+
 ### Build the latest source for the first time
-build: clean init fmt vet lint coverage end
+build_fresh: clean init update fmt vet coverage end
